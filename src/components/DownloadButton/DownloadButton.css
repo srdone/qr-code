@@ -1,0 +1,27 @@
+.download-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  margin-top: 16px;
+}
+
+.download-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.download-button:active {
+  background-color: #004494;
+  transform: translateY(0);
+}
+
+.download-button:focus {
+  outline: 2px solid #0056b3;
+  outline-offset: 2px;
+}

@@ -81,7 +81,7 @@
   - Test error state display
   - _Requirements: 1.4, 2.1, 6.1_
 
-- [ ] 5. Implement DownloadButton component
+- [x] 5. Implement DownloadButton component
   - Create DownloadButton component with click handler
   - Implement canvas-to-blob conversion for PNG export
   - Generate filename with timestamp (format: qrcode-{timestamp}.png)
@@ -90,23 +90,23 @@
   - Show/hide button based on whether QR code is displayed
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 5.1 Write property test for download button presence
+- [x] 5.1 Write property test for download button presence
   - **Property 7: Download button presence**
   - **Validates: Requirements 4.1**
 
-- [ ] 5.2 Write property test for download triggers file save
+- [x] 5.2 Write property test for download triggers file save
   - **Property 8: Download triggers file save**
   - **Validates: Requirements 4.2**
 
-- [ ] 5.3 Write property test for download format
+- [x] 5.3 Write property test for download format
   - **Property 9: Download format is PNG**
   - **Validates: Requirements 4.3**
 
-- [ ] 5.4 Write property test for download filename
+- [x] 5.4 Write property test for download filename
   - **Property 10: Download filename contains identifier**
   - **Validates: Requirements 4.4**
 
-- [ ] 5.5 Write unit tests for DownloadButton component
+- [x] 5.5 Write unit tests for DownloadButton component
   - Test button visibility with QR code present
   - Test button hidden when no QR code
   - Test download click handler

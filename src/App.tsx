@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { TextInput } from './components/TextInput'
 import { QRCodeDisplay } from './components/QRCodeDisplay'
+import { DownloadButton } from './components/DownloadButton'
 
 type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
@@ -68,6 +69,7 @@ function App() {
         size={state.qrSize}
         errorCorrectionLevel={state.errorCorrectionLevel}
       />
+      <DownloadButton text={state.text} />
       <div>
         <p>Error Correction: {state.errorCorrectionLevel}</p>
         <p>Size: {state.qrSize}</p>
