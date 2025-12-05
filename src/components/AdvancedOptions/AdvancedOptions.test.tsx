@@ -48,22 +48,23 @@ describe('AdvancedOptions Component', () => {
             
             // Clean up
             unmount();
+            cleanup();
           }
         ),
         { numRuns: 100 }
       );
     });
 
-    it('Property 18: Advanced controls presence - when expanded, controls for error correction and size should be present', () => {
+    it('Property 18: Advanced controls presence - when expanded, controls for error correction and size should be present', async () => {
       // Feature: qr-code-generator, Property 18: Advanced controls presence
       // Validates: Requirements 8.4, 8.5
       
-      fc.assert(
-        fc.property(
+      await fc.assert(
+        fc.asyncProperty(
           fc.boolean(), // isExpanded state
           fc.constantFrom('L', 'M', 'Q', 'H'), // Error correction level
           fc.integer({ min: 128, max: 512 }), // QR size
-          (isExpanded, errorLevel, qrSize) => {
+          async (isExpanded, errorLevel, qrSize) => {
             const onToggle = vi.fn();
             const onErrorCorrectionChange = vi.fn();
             const onSizeChange = vi.fn();
@@ -101,6 +102,7 @@ describe('AdvancedOptions Component', () => {
             
             // Clean up
             unmount();
+            cleanup();
           }
         ),
         { numRuns: 100 }
