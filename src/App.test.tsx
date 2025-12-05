@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { render, waitFor } from '@testing-library/react';
 import * as fc from 'fast-check';
 import App from './App';
@@ -7,6 +7,13 @@ describe('App Component - Property-Based Tests', () => {
   beforeEach(() => {
     // Clear URL parameters before each test
     window.history.replaceState({}, '', '/');
+    // Clear sessionStorage before each test
+    sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    // Clean up sessionStorage after each test
+    sessionStorage.clear();
   });
 
   describe('Property 13: URL synchronization with input', () => {
@@ -118,6 +125,253 @@ describe('App Component - Property-Based Tests', () => {
               expect(() => new URL(window.location.href)).not.toThrow();
             });
             
+            unmount();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  describe('Property 19: Option changes regenerate QR code', () => {
+    // Feature: qr-code-generator, Property 19: Option changes regenerate QR code
+    // Validates: Requirements 8.6
+    it('should regenerate QR code when error correction level changes', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.constantFrom('L', 'M', 'Q', 'H'),
+          fc.constantFrom('L', 'M', 'Q', 'H'),
+          fc.string({ minLength: 5, maxLength: 50 }).filter(s => s.trim().length >= 5),
+          async (level1, level2, text) => {
+            // Skip if levels are the same
+            if (level1 === level2) return;
+
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set initial URL with text and first level
+            const params1 = new URLSearchParams();
+            params1.set('text', text);
+            params1.set('level', level1);
+            params1.set('size', '256');
+            window.history.replaceState({}, '', `?${params1.toString()}`);
+
+            const { unmount, container } = render(<App />);
+
+            // Verify initial QR code is rendered with level1
+            await waitFor(() => {
+              const canvas = container.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+            });
+
+            unmount();
+
+            // Change to second level
+            const params2 = new URLSearchParams();
+            params2.set('text', text);
+            params2.set('level', level2);
+            params2.set('size', '256');
+            window.history.replaceState({}, '', `?${params2.toString()}`);
+
+            const { unmount: unmount2, container: container2 } = render(<App />);
+
+            // Verify QR code is regenerated with level2
+            await waitFor(() => {
+              const canvas = container2.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+              
+              // Verify the URL reflects the new level
+              const urlParams = new URLSearchParams(window.location.search);
+              expect(urlParams.get('level')).toBe(level2);
+            });
+
+            unmount2();
+          }
+        ),
+        { numRuns: 20 } // Reduced runs due to canvas operations
+      );
+    });
+
+    it('should regenerate QR code when size changes', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.integer({ min: 200, max: 400 }),
+          fc.integer({ min: 200, max: 400 }),
+          fc.string({ minLength: 1, maxLength: 50 }),
+          async (size1, size2, text) => {
+            // Skip if sizes are the same
+            if (size1 === size2) return;
+
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set initial URL with text and first size
+            const params1 = new URLSearchParams();
+            params1.set('text', text);
+            params1.set('level', 'M');
+            params1.set('size', size1.toString());
+            window.history.replaceState({}, '', `?${params1.toString()}`);
+
+            const { unmount, container } = render(<App />);
+
+            // Verify initial QR code is rendered with size1
+            await waitFor(() => {
+              const canvas = container.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+              // Size should be at least the minimum (200) or the requested size
+              const actualSize = Math.max(size1, 200);
+              expect(canvas?.width).toBe(actualSize);
+            });
+
+            unmount();
+
+            // Change to second size
+            const params2 = new URLSearchParams();
+            params2.set('text', text);
+            params2.set('level', 'M');
+            params2.set('size', size2.toString());
+            window.history.replaceState({}, '', `?${params2.toString()}`);
+
+            const { unmount: unmount2, container: container2 } = render(<App />);
+
+            // Verify QR code is regenerated with size2
+            await waitFor(() => {
+              const canvas = container2.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+              // Size should be at least the minimum (200) or the requested size
+              const actualSize = Math.max(size2, 200);
+              expect(canvas?.width).toBe(actualSize);
+            });
+
+            unmount2();
+          }
+        ),
+        { numRuns: 20 } // Reduced runs due to canvas operations
+      );
+    });
+  });
+
+  describe('Property 20: Session persistence of options', () => {
+    // Feature: qr-code-generator, Property 20: Session persistence of options
+    // Validates: Requirements 8.7
+    it('should persist error correction level in sessionStorage', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.constantFrom('L', 'M', 'Q', 'H'),
+          async (level) => {
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set URL with specific level
+            const params = new URLSearchParams();
+            params.set('text', 'test');
+            params.set('level', level);
+            params.set('size', '256');
+            window.history.replaceState({}, '', `?${params.toString()}`);
+
+            const { unmount } = render(<App />);
+
+            // Wait for sessionStorage to be updated
+            await waitFor(() => {
+              const storedLevel = sessionStorage.getItem('errorCorrectionLevel');
+              expect(storedLevel).toBe(level);
+            });
+
+            unmount();
+
+            // Clear URL and render again - should load from sessionStorage
+            window.history.replaceState({}, '', '/');
+            const { unmount: unmount2, container } = render(<App />);
+
+            // Verify the level persisted from sessionStorage
+            await waitFor(() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              const urlLevel = urlParams.get('level');
+              expect(urlLevel).toBe(level);
+            });
+
+            unmount2();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should persist QR size in sessionStorage', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.integer({ min: 200, max: 512 }),
+          async (size) => {
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set URL with specific size
+            const params = new URLSearchParams();
+            params.set('text', 'test');
+            params.set('level', 'M');
+            params.set('size', size.toString());
+            window.history.replaceState({}, '', `?${params.toString()}`);
+
+            const { unmount } = render(<App />);
+
+            // Wait for sessionStorage to be updated
+            await waitFor(() => {
+              const storedSize = sessionStorage.getItem('qrSize');
+              expect(storedSize).toBe(size.toString());
+            });
+
+            unmount();
+
+            // Clear URL and render again - should load from sessionStorage
+            window.history.replaceState({}, '', '/');
+            const { unmount: unmount2 } = render(<App />);
+
+            // Verify the size persisted from sessionStorage
+            await waitFor(() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              const urlSize = urlParams.get('size');
+              expect(urlSize).toBe(size.toString());
+            });
+
+            unmount2();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  describe('Property 21: Error correction level support', () => {
+    // Feature: qr-code-generator, Property 21: Error correction level support
+    // Validates: Requirements 9.3
+    it('should generate QR codes successfully with all error correction levels', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.constantFrom('L', 'M', 'Q', 'H'),
+          fc.string({ minLength: 1, maxLength: 100 }),
+          async (level, text) => {
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set URL with specific level and text
+            const params = new URLSearchParams();
+            params.set('text', text);
+            params.set('level', level);
+            params.set('size', '256');
+            window.history.replaceState({}, '', `?${params.toString()}`);
+
+            const { unmount, container } = render(<App />);
+
+            // Verify QR code is generated successfully
+            await waitFor(() => {
+              const canvas = container.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+              
+              // Verify no error message is displayed
+              const errorElement = container.querySelector('.qr-error');
+              expect(errorElement).not.toBeInTheDocument();
+            });
+
             unmount();
           }
         ),

@@ -15,13 +15,18 @@ interface AppState {
 }
 
 function App() {
-  // Initialize state from URL parameters
+  // Initialize state from URL parameters and sessionStorage
   const initializeFromURL = (): AppState => {
     const params = new URLSearchParams(window.location.search);
+    
+    // Try to get values from sessionStorage first, then URL, then defaults
+    const storedLevel = sessionStorage.getItem('errorCorrectionLevel') as ErrorCorrectionLevel | null;
+    const storedSize = sessionStorage.getItem('qrSize');
+    
     return {
       text: params.get('text') || '',
-      errorCorrectionLevel: (params.get('level') as ErrorCorrectionLevel) || 'M',
-      qrSize: parseInt(params.get('size') || '256', 10),
+      errorCorrectionLevel: (params.get('level') as ErrorCorrectionLevel) || storedLevel || 'M',
+      qrSize: parseInt(params.get('size') || storedSize || '256', 10),
       showAdvanced: false
     };
   };
@@ -40,6 +45,12 @@ function App() {
     const newURL = params.toString() ? `?${params.toString()}` : window.location.pathname;
     window.history.replaceState({}, '', newURL);
   }, [state.text, state.errorCorrectionLevel, state.qrSize]);
+
+  // Persist advanced options to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem('errorCorrectionLevel', state.errorCorrectionLevel);
+    sessionStorage.setItem('qrSize', state.qrSize.toString());
+  }, [state.errorCorrectionLevel, state.qrSize]);
 
   const updateText = (text: string) => {
     setState(prev => ({ ...prev, text }));

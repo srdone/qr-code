@@ -137,22 +137,22 @@
   - Test size input
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 7. Wire advanced options to QR code generation
+- [x] 7. Wire advanced options to QR code generation
   - Connect error correction level state to QRCodeCanvas component
   - Connect size state to QRCodeCanvas component
   - Ensure QR code regenerates when options change
   - Implement session persistence using sessionStorage or state
   - _Requirements: 8.6, 8.7, 9.3_
 
-- [ ] 7.1 Write property test for option changes regenerate QR code
+- [x] 7.1 Write property test for option changes regenerate QR code
   - **Property 19: Option changes regenerate QR code**
   - **Validates: Requirements 8.6**
 
-- [ ] 7.2 Write property test for session persistence
+- [x] 7.2 Write property test for session persistence
   - **Property 20: Session persistence of options**
   - **Validates: Requirements 8.7**
 
-- [ ] 7.3 Write property test for error correction level support
+- [x] 7.3 Write property test for error correction level support
   - **Property 21: Error correction level support**
   - **Validates: Requirements 9.3**
 
