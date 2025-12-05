@@ -113,7 +113,7 @@
   - Test filename generation
   - _Requirements: 4.1, 4.2, 4.4_
 
-- [ ] 6. Implement AdvancedOptions component
+- [x] 6. Implement AdvancedOptions component
   - Create collapsible AdvancedOptions component with toggle button
   - Implement expand/collapse functionality
   - Add dropdown/select for error correction level (L, M, Q, H) with descriptions
@@ -121,15 +121,15 @@
   - Ensure controls are only visible when section is expanded
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 6.1 Write property test for advanced options toggle
+- [x] 6.1 Write property test for advanced options toggle
   - **Property 17: Advanced options toggle**
   - **Validates: Requirements 8.2, 8.3**
 
-- [ ] 6.2 Write property test for advanced controls presence
+- [x] 6.2 Write property test for advanced controls presence
   - **Property 18: Advanced controls presence**
   - **Validates: Requirements 8.4, 8.5**
 
-- [ ] 6.3 Write unit tests for AdvancedOptions component
+- [x] 6.3 Write unit tests for AdvancedOptions component
   - Test initial collapsed state
   - Test expand/collapse toggle
   - Test controls visibility when expanded

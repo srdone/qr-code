@@ -3,6 +3,7 @@ import './App.css'
 import { TextInput } from './components/TextInput'
 import { QRCodeDisplay } from './components/QRCodeDisplay'
 import { DownloadButton } from './components/DownloadButton'
+import { AdvancedOptions } from './components/AdvancedOptions'
 
 type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
@@ -70,11 +71,14 @@ function App() {
         errorCorrectionLevel={state.errorCorrectionLevel}
       />
       <DownloadButton text={state.text} />
-      <div>
-        <p>Error Correction: {state.errorCorrectionLevel}</p>
-        <p>Size: {state.qrSize}</p>
-        <p>Advanced: {state.showAdvanced ? 'Shown' : 'Hidden'}</p>
-      </div>
+      <AdvancedOptions
+        isExpanded={state.showAdvanced}
+        onToggle={toggleAdvanced}
+        errorCorrectionLevel={state.errorCorrectionLevel}
+        onErrorCorrectionChange={updateErrorCorrectionLevel}
+        qrSize={state.qrSize}
+        onSizeChange={updateQRSize}
+      />
     </div>
   )
 }
