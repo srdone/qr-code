@@ -376,5 +376,108 @@ describe('DownloadButton Component', () => {
       URL.revokeObjectURL = originalRevokeObjectURL;
       document.createElement = originalCreateElement;
     });
+
+    it('should log error to console when canvas is not found', async () => {
+      // Remove canvas to simulate error condition
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        document.body.removeChild(canvas);
+      }
+
+      // Mock console.error
+      const originalConsoleError = console.error;
+      const consoleErrorMock = vi.fn();
+      console.error = consoleErrorMock;
+
+      // Mock alert
+      const originalAlert = window.alert;
+      window.alert = vi.fn();
+
+      const { container } = render(<DownloadButton text="Test" />);
+      
+      const button = within(container).getByRole('button', { name: /download/i });
+      await userEvent.click(button);
+
+      // Verify error was logged
+      expect(consoleErrorMock).toHaveBeenCalledWith('Download error: QR code canvas not found');
+
+      // Restore
+      console.error = originalConsoleError;
+      window.alert = originalAlert;
+
+      // Re-add canvas for other tests
+      const mockCanvas = document.createElement('canvas');
+      mockCanvas.width = 256;
+      mockCanvas.height = 256;
+      document.body.appendChild(mockCanvas);
+    });
+
+    it('should log error to console when blob creation fails', async () => {
+      const mockCanvas = document.querySelector('canvas') as HTMLCanvasElement;
+      const originalToBlob = mockCanvas.toBlob;
+
+      // Mock toBlob to return null (failure case)
+      mockCanvas.toBlob = vi.fn((callback: BlobCallback) => {
+        callback(null);
+      });
+
+      // Mock console.error
+      const originalConsoleError = console.error;
+      const consoleErrorMock = vi.fn();
+      console.error = consoleErrorMock;
+
+      // Mock alert
+      const originalAlert = window.alert;
+      window.alert = vi.fn();
+
+      const { container } = render(<DownloadButton text="Test" />);
+      
+      const button = within(container).getByRole('button', { name: /download/i });
+      await userEvent.click(button);
+
+      // Verify error was logged
+      expect(consoleErrorMock).toHaveBeenCalledWith('Download error: Failed to create blob from canvas');
+
+      // Restore
+      mockCanvas.toBlob = originalToBlob;
+      console.error = originalConsoleError;
+      window.alert = originalAlert;
+    });
+
+    it('should handle download errors with user-friendly messages', async () => {
+      const mockCanvas = document.querySelector('canvas') as HTMLCanvasElement;
+      const originalToBlob = mockCanvas.toBlob;
+
+      // Mock toBlob to throw an error
+      mockCanvas.toBlob = vi.fn(() => {
+        throw new Error('Canvas error');
+      });
+
+      // Mock console.error
+      const originalConsoleError = console.error;
+      const consoleErrorMock = vi.fn();
+      console.error = consoleErrorMock;
+
+      // Mock alert
+      const originalAlert = window.alert;
+      const alertMock = vi.fn();
+      window.alert = alertMock;
+
+      const { container } = render(<DownloadButton text="Test" />);
+      
+      const button = within(container).getByRole('button', { name: /download/i });
+      await userEvent.click(button);
+
+      // Verify error was logged
+      expect(consoleErrorMock).toHaveBeenCalled();
+      
+      // Verify user-friendly alert was shown
+      expect(alertMock).toHaveBeenCalledWith('An error occurred while downloading the QR code. Please try again.');
+
+      // Restore
+      mockCanvas.toBlob = originalToBlob;
+      console.error = originalConsoleError;
+      window.alert = originalAlert;
+    });
   });
 });
