@@ -156,16 +156,16 @@
   - **Property 21: Error correction level support**
   - **Validates: Requirements 9.3**
 
-- [ ] 8. Implement URL initialization with QR code generation
+- [x] 8. Implement URL initialization with QR code generation
   - Ensure that when app loads with URL parameters, QR code is automatically generated
   - Test flow: URL with text parameter → input pre-filled → QR code displayed
   - _Requirements: 7.3_
 
-- [ ] 8.1 Write property test for URL initialization generates QR code
+- [x] 8.1 Write property test for URL initialization generates QR code
   - **Property 15: URL initialization generates QR code**
   - **Validates: Requirements 7.3**
 
-- [ ] 8.2 Write integration test for complete URL sharing flow
+- [x] 8.2 Write integration test for complete URL sharing flow
   - Test: generate QR code → URL updates → copy URL → load in new instance → verify state
   - _Requirements: 7.1, 7.2, 7.3_
 

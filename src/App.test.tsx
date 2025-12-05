@@ -281,7 +281,7 @@ describe('App Component - Property-Based Tests', () => {
 
             // Clear URL and render again - should load from sessionStorage
             window.history.replaceState({}, '', '/');
-            const { unmount: unmount2, container } = render(<App />);
+            const { unmount: unmount2 } = render(<App />);
 
             // Verify the level persisted from sessionStorage
             await waitFor(() => {
@@ -376,6 +376,127 @@ describe('App Component - Property-Based Tests', () => {
           }
         ),
         { numRuns: 100 }
+      );
+    });
+  });
+
+  describe('Property 15: URL initialization generates QR code', () => {
+    // Feature: qr-code-generator, Property 15: URL initialization generates QR code
+    // Validates: Requirements 7.3
+    it('should automatically generate QR code when app loads with URL parameters', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
+          async (text) => {
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Set URL parameter with text before rendering
+            const params = new URLSearchParams();
+            params.set('text', text);
+            params.set('level', 'M');
+            params.set('size', '256');
+            window.history.replaceState({}, '', `?${params.toString()}`);
+
+            const { unmount, container } = render(<App />);
+
+            // Verify that:
+            // 1. Input is pre-filled with text from URL
+            // 2. QR code is automatically generated and displayed
+            await waitFor(() => {
+              // Check input is pre-filled
+              const textarea = container.querySelector('textarea');
+              expect(textarea).toBeInTheDocument();
+              expect(textarea?.value).toBe(text);
+
+              // Check QR code is displayed (canvas element exists)
+              const canvas = container.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+              
+              // Verify no placeholder message is shown
+              const placeholder = container.querySelector('.qr-placeholder');
+              expect(placeholder).not.toBeInTheDocument();
+            });
+
+            unmount();
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+  });
+
+  describe('Integration Test: Complete URL sharing flow', () => {
+    // Integration test for complete URL sharing flow
+    // Validates: Requirements 7.1, 7.2, 7.3
+    it('should support complete URL sharing flow: generate → URL updates → copy URL → load in new instance → verify state', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
+          fc.constantFrom('L', 'M', 'Q', 'H'),
+          fc.integer({ min: 200, max: 400 }),
+          async (text, level, size) => {
+            // Step 1: Start with clean state
+            window.history.replaceState({}, '', '/');
+            sessionStorage.clear();
+
+            // Step 2: Render app and simulate user entering text
+            const params = new URLSearchParams();
+            params.set('text', text);
+            params.set('level', level);
+            params.set('size', size.toString());
+            window.history.replaceState({}, '', `?${params.toString()}`);
+
+            const { unmount: unmount1, container: container1 } = render(<App />);
+
+            // Step 3: Verify QR code is generated and URL is updated
+            await waitFor(() => {
+              const canvas = container1.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+
+              const urlParams = new URLSearchParams(window.location.search);
+              expect(urlParams.get('text')).toBe(text);
+              expect(urlParams.get('level')).toBe(level);
+              expect(urlParams.get('size')).toBe(size.toString());
+            });
+
+            // Step 4: Copy the URL (simulate by storing it)
+            const sharedURL = window.location.search;
+
+            unmount1();
+
+            // Step 5: Simulate loading in a new instance (clear state and load with copied URL)
+            sessionStorage.clear();
+            window.history.replaceState({}, '', sharedURL);
+
+            const { unmount: unmount2, container: container2 } = render(<App />);
+
+            // Step 6: Verify state is restored correctly
+            await waitFor(() => {
+              // Input should be pre-filled
+              const textarea = container2.querySelector('textarea');
+              expect(textarea).toBeInTheDocument();
+              expect(textarea?.value).toBe(text);
+
+              // QR code should be automatically generated
+              const canvas = container2.querySelector('canvas');
+              expect(canvas).toBeInTheDocument();
+
+              // URL should contain the same parameters
+              const urlParams = new URLSearchParams(window.location.search);
+              expect(urlParams.get('text')).toBe(text);
+              expect(urlParams.get('level')).toBe(level);
+              expect(urlParams.get('size')).toBe(size.toString());
+
+              // No placeholder should be shown
+              const placeholder = container2.querySelector('.qr-placeholder');
+              expect(placeholder).not.toBeInTheDocument();
+            });
+
+            unmount2();
+          }
+        ),
+        { numRuns: 50 } // Reduced runs due to multiple render cycles
       );
     });
   });
